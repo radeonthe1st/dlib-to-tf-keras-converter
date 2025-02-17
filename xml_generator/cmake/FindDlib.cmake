@@ -1,5 +1,13 @@
 # - Find Dlib
-# Find the native Dlib includes and library
+# This script locates the Dlib library and its headers.
+# It searches common paths, virtual environments, and allows manual overrides.
+#
+# If Dlib is not found automatically, you can manually set the following:
+#   - DLIB_INCLUDE_DIR: Path to the Dlib include directory (where dlib/data_io.h is located)
+#   - DLIB_LIBRARY: Path to the Dlib shared library (libdlib.so)
+#
+# Example of manual override when running CMake:
+#   cmake -DDLIB_INCLUDE_DIR=/path/to/dlib/include -DDLIB_LIBRARY=/path/to/dlib.so ..
 #
 #  DLIB_INCLUDE_DIR - where to find dlib headers, etc.
 #  DLIB_LIBRARIES   - List of libraries when using dlib.
@@ -18,23 +26,36 @@ find_package(LAPACK REQUIRED)
 find_package(GIF)   # this is an optional package and will set GIF_LIBRARY
 
 # Look for headers
-find_path(DLIB_INCLUDE_DIR NAMES dlib/algs.h PATHS $ENV{DLIB_INCLUDE} /opt/local/include /usr/local/include /usr/include DOC "Path in which the file dlib is located." )
+find_path(DLIB_INCLUDE_DIR
+          NAMES dlib/data_io.h
+          HINTS $ENV{DLIB_INCLUDE_DIR}          # Check environment variable
+                ${CMAKE_PREFIX_PATH}/include    # Look in CMAKE_PREFIX_PATH
+                ${Python3_SITEARCH}/dlib       # Python-specific locations
+                ${Python3_SITELIB}/dlib
+                /usr/local/include             # Common system-wide paths
+                /usr/include
+          DOC "Path to Dlib include directory")
 mark_as_advanced(DLIB_INCLUDE_DIR)
 
-find_library(DLIB_LIBRARIES NAMES dlib libdlib PATHS /usr/lib /usr/local/lib DOC "Path to dlib library." )
+find_library(DLIB_LIBRARY
+             NAMES dlib libdlib.so
+             HINTS $ENV{DLIB_LIBRARY}            # Check environment variable
+                   ${CMAKE_PREFIX_PATH}/lib     # Look in CMAKE_PREFIX_PATH
+                   ${Python3_SITEARCH}          # Python-specific locations
+                   ${Python3_SITELIB}
+                   /usr/local/lib              # Common system-wide paths
+                   /usr/lib
+             DOC "Path to Dlib library")
 mark_as_advanced(DLIB_LIBRARIES)
 
-if (DLIB_INCLUDE_DIR AND DLIB_LIBRARIES)  
-  set(DLIB_FOUND 1)  
-else ()
-   set(DLIB_FOUND 0)
-endif ()
+if (DLIB_INCLUDE_DIR AND DLIB_LIBRARY)
+    message(STATUS "Found Dlib: include=${DLIB_INCLUDE_DIR}, lib=${DLIB_LIBRARY}")
+else()
+    message(FATAL_ERROR "Dlib not found. Set DLIB_INCLUDE_DIR and DLIB_LIBRARY manually if needed.")
+endif()
 
-# Report the results.
-if (NOT DLIB_FOUND)
-    set(DLIB_DIR_MESSAGE "Dlib was not found")
-    message(FATAL_ERROR "${DLIB_DIR_MESSAGE}")   
-endif ()
+# Marks these variables as advanced so they do not clutter the CMake GUI.
+mark_as_advanced(DLIB_INCLUDE_DIR DLIB_LIBRARY)
 
 if (GIF_FOUND)
 set (DLIB_LIBRARIES ${DLIB_LIBRARIES} ${GIF_LIBRARY})
