@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.2)
 
 project (DlibToXmlConverter C CXX)
 
+# Ensure CMake can find the custom FindDlib module
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+find_package(Dlib REQUIRED)
+
+
 set_property (GLOBAL PROPERTY USE_FOLDERS ON)
 
 set (CMAKE_CXX_STANDARD 14)
@@ -17,8 +22,6 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-find_package(Dlib REQUIRED)
 
 add_subdirectory(src)
 
